@@ -73,18 +73,3 @@ const requireAuth = function (req, _res, next) {
 
 
 module.exports = { setTokenCookie, restoreUser, requireAuth };
-
-// fetch('/api/users', {
-//     method: 'POST',
-//     headers: {
-//       "Content-Type": "application/json",
-//       "XSRF-TOKEN": `tEwfsudx-4_kJNrPenRO9QiXoDYDdSXBCon0`
-//     },
-//     body: JSON.stringify({
-//       username: 'tomtest',
-//       password: 'testing1',
-//       email: 'tom@mail.com',
-//       firstName: 'tom',
-//       lastName: 'testing'
-//     })
-//   }).then(res => res.json()).then(data => console.log(data));
