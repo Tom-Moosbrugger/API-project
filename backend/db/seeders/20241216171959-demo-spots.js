@@ -48,7 +48,7 @@ module.exports = {
         description: "Place where things happens",
         price: 250,
       }
-    ])
+    ], { validate: true });
   },
 
   async down (queryInterface, Sequelize) {
