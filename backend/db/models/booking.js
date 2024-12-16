@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
           const bookingStartDate = new Date(value).toDateString();
           const bookingStartTime = new Date(bookingStartDate).getTime();
           
-          if (bookingStartDate < todaysDate) {
+          if (bookingStartTime < todaysTime) {
             throw new Error("startDate cannot be in the past");
           }
         },
