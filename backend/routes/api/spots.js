@@ -175,4 +175,38 @@ router.post('/', requireAuth, validateSpot, async (req, res, next) => {
 
 });
 
+router.delete('/:spotId', requireAuth, async (req, res, next) => {
+    const { user } = req;    
+    const ownerId = user.id;
+
+    const spotId = parseInt(req.params.spotId);
+
+    const spot = await Spot.findOne( {
+        where: {
+            ownerId,
+            id: spotId
+        }
+    });
+
+    if(spot){
+        await spot.destroy();
+        
+        return res.status(200).json({
+        "message": "Successfully deleted"
+      });
+
+    } else {
+        // const err = new Error(`Spot couldn't be found`);
+        // err.status = 404;
+        // err.title = `Spot couldn't be found`;
+        // err.errors = { message: `Spot couldn't be found` };
+        // return next(err);
+
+        return res.status(404).json({
+             "message": "Spot couldn't be found"
+        });
+    }  
+
+});
+
 module.exports = router;
