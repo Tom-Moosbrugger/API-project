@@ -65,4 +65,42 @@ router.get('/current', requireAuth, async (req, res, next) => {
     });
 });
 
+router.post('/:reviewId/images', requireAuth, async (req, res, next) => {
+    const { id: userId } = req.user;
+    
+    const { reviewId } = req.params;
+
+    const { url } = req.body;
+
+    let review = await Review.findByPk(+reviewId, {
+        include: [{ model: ReviewImage, attributes: [] }],
+        attributes: {
+            include: [[sequelize.fn('COUNT', sequelize.col('ReviewImages.id')), "imageCount"]]
+        },
+        group: ['Review.id']
+    });
+
+    if (!review) {
+        res.status(404).json({ message: "Review couldn't be found" });
+    }
+
+    review = review.toJSON();
+
+    if (review.userId !== userId) {
+        res.status(401).json({ message: "Review must belong to the current user" });
+    } else if (review.imageCount > 10) {
+        res.status(403).json({ message: "Maximum number of images for this resource was reached" })
+    } else {
+        const newReviewImage = await ReviewImage.create({ 
+            reviewId,
+            url
+         });
+
+        res.status(201).json({
+            id: newReviewImage.id,
+            url: newReviewImage.url
+        });
+    }
+})
+
 module.exports = router;
