@@ -101,6 +101,26 @@ router.post('/:reviewId/images', requireAuth, async (req, res, next) => {
             url: newReviewImage.url
         });
     }
-})
+});
+
+router.delete('/:reviewId', requireAuth, async (req, res, next) => {
+    const { id: userId } = req.user;
+    
+    const { reviewId } = req.params;
+
+    let review = await Review.findByPk(+reviewId);
+
+    if (!review) {
+        res.status(404).json({ message: "Review couldn't be found" });
+    } else if (review.userId !== userId) {
+        res.status(403).json({ message: "Review must belong to the current user" });
+    } else {
+        await review.destroy();
+
+        res.json({
+            message: "Successfully deleted"
+        });
+    } 
+});
 
 module.exports = router;
