@@ -68,11 +68,11 @@ router.get('/current', requireAuth, async (req, res, next) => {
 router.post('/:reviewId/images', requireAuth, async (req, res, next) => {
     const { id: userId } = req.user;
     
-    const { reviewId } = req.params;
+    const reviewId = parseInt(req.params.reviewId);
 
     const { url } = req.body;
 
-    let review = await Review.findByPk(+reviewId, {
+    let review = await Review.findByPk(reviewId, {
         include: [{ model: ReviewImage, attributes: [] }],
         attributes: {
             include: [[sequelize.fn('COUNT', sequelize.col('ReviewImages.id')), "imageCount"]]
