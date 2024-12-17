@@ -7,7 +7,7 @@ const { handleValidationErrors } = require('../../utils/validation');
 const { requireAuth } = require('../../utils/auth');
 
 const { Spot, Review, SpotImage, sequelize } = require('../../db/models');
-const { Op, fn, col } = require('sequelize');
+const { Op, fn, col, ValidationError } = require('sequelize');
 
 const router = express.Router();
 
@@ -37,6 +37,25 @@ router.get('/', async (req, res, next) => {
     res.json( {
         Spots: spots
     });
+});
+
+router.post('/', requireAuth, async (req, res, next) => {
+    const { user } = req;
+
+    try {
+        const newSpot = await Spot.create({
+            ownerId: user.id,
+            ...req.body
+        });
+        
+        res.status(201).json(newSpot);
+    } catch(err) {
+        if (err instanceof ValidationError) {
+            err.status = 400;
+        }
+
+        next(err);
+    }
 });
 
 module.exports = router;
