@@ -87,7 +87,7 @@ router.post('/:reviewId/images', requireAuth, async (req, res, next) => {
     review = review.toJSON();
 
     if (review.userId !== userId) {
-        res.status(401).json({ message: "Review must belong to the current user" });
+        res.status(403).json({ message: "Review must belong to the current user" });
     } else if (review.imageCount > 10) {
         res.status(403).json({ message: "Maximum number of images for this resource was reached" })
     } else {
