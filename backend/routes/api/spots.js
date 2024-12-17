@@ -60,18 +60,22 @@ router.post('/:spotId/images', requireAuth, async (req, res, next) => {
             preview
         });
 
-      return res.json({
+      return res.status(201).json({
         id: newSpotImage.id,
         url: newSpotImage.url,
         preview: newSpotImage.preview
       });
 
     } else {
-        const err = new Error(`Spot couldn't be found`);
-        err.status = 401;
-        err.title = `Spot couldn't be found`;
-        err.errors = { message: `Spot couldn't be found` };
-        return next(err);
+        // const err = new Error(`Spot couldn't be found`);
+        // err.status = 404;
+        // err.title = `Spot couldn't be found`;
+        // err.errors = { message: `Spot couldn't be found` };
+        // return next(err);
+
+        return res.status(404).json({
+             "message": "Spot couldn't be found"
+        });
     }      
 
 });
