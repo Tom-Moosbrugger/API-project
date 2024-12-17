@@ -30,12 +30,12 @@ const validateSpot = [
     check('lat')
       .exists({ checkFalsy: true })
       .withMessage('lat is required')
-      .isInt({ min: -90, max: 90 })
+      .isFloat({ min: -90, max: 90 })
       .withMessage('Latitude must be within -90 and 90'),
-    check('lat')
+    check('lng')
       .exists({ checkFalsy: true })
-      .withMessage('lat is required')
-      .isInt({ min: -180, max: 180 })
+      .withMessage('lng is required')
+      .isFloat({ min: -180, max: 180 })
       .withMessage('Longitude must be within -180 and 180'),
     check('name')
       .exists({ checkFalsy: true })
@@ -48,7 +48,7 @@ const validateSpot = [
     check('price')
       .exists({ checkFalsy: true })
       .withMessage('Price is required')
-      .isInt({ min: 0 })
+      .isFloat({ min: 0 })
       .withMessage('Price per day must be a positive number'),
     handleValidationErrors
   ];
@@ -214,11 +214,6 @@ router.post('/:spotId/images', requireAuth, async (req, res, next) => {
       });
 
     } else {
-        // const err = new Error(`Spot couldn't be found`);
-        // err.status = 404;
-        // err.title = `Spot couldn't be found`;
-        // err.errors = { message: `Spot couldn't be found` };
-        // return next(err);
 
         return res.status(404).json({
              "message": "Spot couldn't be found"
@@ -238,6 +233,45 @@ router.post('/', requireAuth, validateSpot, async (req, res, next) => {
     res.status(201).json(newSpot);
 
 });
+
+router.put('/:spotId', requireAuth, validateSpot, async (req, res, next) => {
+    const { user } = req;    
+    const ownerId = user.id;
+
+    const spotId = parseInt(req.params.spotId);
+    const { address, city, state, country, lat, lng, name, description, price} = req.body;
+
+    console.log(address, city, state, country, lat, lng, name, description, price)
+    const spot = await Spot.findOne( {
+        where: {
+            ownerId,
+            id: spotId
+        }
+    });
+
+    if(spot){
+        spot.address = address;
+        spot.city = city;
+        spot.state =  state;    
+        spot.country = country;
+        spot.lat = lat;
+        spot.lng = lng;
+        spot.name = name;
+        spot.description = description;
+        spot.price = price;    
+
+        await spot.save();
+        
+        return res.status(200).json(spot);
+
+    } else {
+        return res.status(404).json({
+             "message": "Spot couldn't be found"
+        });
+    } 
+
+});
+
 
 router.delete('/:spotId', requireAuth, async (req, res, next) => {
     const { user } = req;    
@@ -260,11 +294,6 @@ router.delete('/:spotId', requireAuth, async (req, res, next) => {
       });
 
     } else {
-        // const err = new Error(`Spot couldn't be found`);
-        // err.status = 404;
-        // err.title = `Spot couldn't be found`;
-        // err.errors = { message: `Spot couldn't be found` };
-        // return next(err);
 
         return res.status(404).json({
              "message": "Spot couldn't be found"
@@ -272,5 +301,7 @@ router.delete('/:spotId', requireAuth, async (req, res, next) => {
     }  
 
 });
+
+
 
 module.exports = router;
