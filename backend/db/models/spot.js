@@ -96,7 +96,8 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DECIMAL(7,2),
       allowNull: false,
       validate: {
-        notEmpty: true
+        notEmpty: true,
+        min: 0
       }
     }
   }, {
