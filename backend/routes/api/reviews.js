@@ -37,23 +37,6 @@ router.get('/current', requireAuth, async (req, res, next) => {
         ]
     });
 
-    /*
-
-    I have a big array of reviews
-    I need to append spotImages to the spots property of each review
-    the spot image needs to belong to the spot AND be a preview image
-
-    I can grab the spotIds from the reviews
-    query for the related spotImages, checking for ones associated with those spots, and that have preview flag
-    
-    so then I'll have an array of reviews
-    and an array of spotImage object
-    I can iterate through the review array:
-        check if the spot.spotId matches the spotId of the spotImages
-        if yes, add spot.previewImage = 'url'
-
-    */
-
     const spotIds = reviews.map(review => review.Spot.id);
 
     const spotImages = await SpotImage.findAll({
