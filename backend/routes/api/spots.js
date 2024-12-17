@@ -6,7 +6,7 @@ const { handleValidationErrors } = require('../../utils/validation');
 
 const { requireAuth } = require('../../utils/auth');
 
-const { Spot, Review, SpotImage, sequelize } = require('../../db/models');
+const { Spot, Review, SpotImage, sequelize, User } = require('../../db/models');
 
 
 const { Op, fn, col, ValidationError, where } = require('sequelize');
@@ -53,6 +53,46 @@ const validateSpot = [
     handleValidationErrors
   ];
 
+
+router.get('/:spotId', async (req, res, next) => {
+    
+    const spotId = parseInt(req.params.spotId);
+
+    const spot = await Spot.findOne( {
+        where: { id: spotId},
+        include: [
+            {
+                model: Review,
+                attributes: []
+            },
+            {
+                model: User,
+                as: 'Owner',
+                attributes: ['id', 'firstName', 'lastName']
+            },
+            {
+                model: SpotImage,
+                attributes: ['id', 'url', 'preview']
+            }
+        ],
+        attributes: {
+            include: [
+                [ sequelize.fn('AVG', sequelize.col('Reviews.stars')), 'avgRating' ],
+                [ sequelize.fn('COUNT', sequelize.col('Reviews.id')), 'numReviews' ]
+            ]
+        }        
+    });
+
+    if(spot.id){
+        res.status(200).json( spot );
+    } else {
+        return res.status(404).json({
+            "message": "Spot couldn't be found"
+       });
+    }
+    
+
+});
 
 router.get('/current', requireAuth, async (req, res, next) => {
     const { user } = req;    
