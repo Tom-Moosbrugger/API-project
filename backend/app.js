@@ -1,10 +1,24 @@
+// initialize express
 const express = require('express');
+
+// assists with asynchronous error-handling in express
 require('express-async-errors');
+
+//logs information about server requests and responses
 const morgan = require('morgan');
+
+// middleware for configuring cross-origin resource sharing
 const cors = require('cors');
+
+// security middleware that adds CSURF protection capabilities
 const csurf = require('csurf');
+
+//security middleware
 const helmet = require('helmet');
+
+// parses cookies from requests
 const cookieParser = require('cookie-parser');
+
 
 const { environment } = require('./config');
 const isProduction = environment === 'production';
@@ -25,12 +39,14 @@ if (!isProduction) {
     app.use(cors());
 }
 
+// helmet helps set a variety of headers to better secure your app
 app.use(
     helmet.crossOriginResourcePolicy({
         policy: "cross-origin"
     })
 );
 
+// Set the _csrf token and create req.csrfToken method
 app.use(
     csurf({
       cookie: {
