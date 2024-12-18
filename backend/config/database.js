@@ -1,5 +1,11 @@
 const config = require('./index');
 
+/*
+
+This will allow you to load the database configuration environment variables from the .env file into the config/index.js, as well as define the global schema for the project.
+
+*/
+
 module.exports = {
   development: {
     storage: config.dbFile,
