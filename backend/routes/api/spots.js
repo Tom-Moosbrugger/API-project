@@ -63,6 +63,41 @@ const validateSpot = [
     handleValidationErrors
   ];
 
+  const validateQueryParams = [
+    check("page")
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage("Page must be greater than or equal to 1"),
+    check("size")
+      .optional()
+      .isInt({ min: 1, max: 20 })
+      .withMessage("Size must be between 1 and 20"),
+    check("minLng")
+      .optional()
+      .isFloat({ min: -180, max: 180  })
+      .withMessage("Minimum longitude is invalid"),
+    check("maxLng")
+      .optional()
+      .isFloat({min: -180, max: 180 })
+      .withMessage("Maximum longitude is invalid"),
+    check("minLat")
+      .optional()
+      .isFloat({ min: -90, max: 90})
+      .withMessage("Minimum latitude is invalid"),
+    check("maxLat")
+      .optional()
+      .isFloat({ min: -90 , max: 90 })
+      .withMessage("Maximum latitude is invalid"),
+    check("minPrice")
+      .optional()
+      .isFloat({ min: 0 })
+      .withMessage("Minimum price must be greater than or equal to 0"),
+    check("maxPrice")
+      .optional()
+      .isFloat({ min: 0 })
+      .withMessage("Maximum price must be greater than or equal to 0"),
+    handleValidationErrors,
+  ];
 
 router.get('/:spotId/reviews', async (req, res, next) => {
     const spotId = parseInt(req.params.spotId);
@@ -170,8 +205,33 @@ router.get('/:spotId', async (req, res, next) => {
 
 
 
-router.get('/', async (req, res, next) => {
+router.get('/', validateQueryParams, async (req, res, next) => {
+
+    const query = {
+        where: { }
+    };
+    
+    let {page, size, minLat, maxLat, minLng, maxLng, minPrice, maxPrice } = req.query;
+
+    page = ( page === undefined ) ? 1 : parseInt(page) ; 
+    size = ( size === undefined ) ? 20 : parseInt(size);
+         
+    if (minLat) query.where.minLat = parseFloat(minLat);
+    if (maxLat) query.where.maxLat = parseFloat(maxLat);
+    if (minLng) query.where.minLng = parseFloat(minLng);
+    if (maxLng) query.where.maxLng = parseFloat(maxLng);
+    if (minPrice) query.where.minPrice = parseFloat(minPrice);
+    if (maxPrice ) query.where.maxPrice = parseFloat(maxPrice);
+
+    // const limit = size;
+    // const offset = size * (page - 1);
+    query.limit = size;
+    query.offset = size * (page - 1);
+
+    console.log(page, size, minLat, maxLat, minLng, maxLng, minPrice, maxPrice , query.offset);
+
     const spots = await Spot.findAll( {
+        query,
         include: [
             {
                 model: Review,
@@ -195,7 +255,9 @@ router.get('/', async (req, res, next) => {
     });
 
     res.json( {
-        Spots: spots
+        Spots: spots,
+        page,
+        size
     });
 });
 
