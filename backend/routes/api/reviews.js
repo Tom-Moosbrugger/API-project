@@ -113,29 +113,6 @@ router.post('/:reviewId/images', requireAuth, async (req, res, next) => {
     }
 });
 
-/*
-
-require authentication
-require authorization
-
-update a review
-user must be logged in to edit reviews
-user can only edit a review that belongs to them
-must submit complete body
-body needs to be validate
-
-user submits a request to /api/reviews/:reviewId
-assuming they are authenticated, req hits the endpoint
-validate the body of the request in advance
-get the user id
-get the id of the review from the req.params
-find the review using the id
-if there isn't a review with that id, send an error
-if there is a review, but it doesn't belong to the current user, send an error
-if there is a review and it belongs to the current user, update the response.
-
-*/
-
 router.put('/:reviewId', requireAuth, validateReviewBody, async (req, res, next) => {
     const { id: userId } = req.user;
     
