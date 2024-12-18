@@ -12,6 +12,16 @@ const { Op, fn, col } = require('sequelize');
 
 const router = express.Router();
 
+const validateReviewBody = [
+    check('review')
+      .exists({ checkFalsy: true })
+      .withMessage('Review text is required'),
+    check('stars')
+      .isInt({ min: 1, max: 5})
+      .withMessage('Stars must be an integer from 1 to 5'),
+    handleValidationErrors
+  ];
+
 router.get('/current', requireAuth, async (req, res, next) => {
     const { id } = req.user
 
@@ -103,12 +113,59 @@ router.post('/:reviewId/images', requireAuth, async (req, res, next) => {
     }
 });
 
+/*
+
+require authentication
+require authorization
+
+update a review
+user must be logged in to edit reviews
+user can only edit a review that belongs to them
+must submit complete body
+body needs to be validate
+
+user submits a request to /api/reviews/:reviewId
+assuming they are authenticated, req hits the endpoint
+validate the body of the request in advance
+get the user id
+get the id of the review from the req.params
+find the review using the id
+if there isn't a review with that id, send an error
+if there is a review, but it doesn't belong to the current user, send an error
+if there is a review and it belongs to the current user, update the response.
+
+*/
+
+router.put('/:reviewId', requireAuth, validateReviewBody, async (req, res, next) => {
+    const { id: userId } = req.user;
+    
+    const reviewId = parseInt(req.params.reviewId);
+
+    const { review, stars } = req.body;
+
+    let updatedReview = await Review.findByPk(reviewId);
+
+    if (!updatedReview) {
+        res.status(404).json({ message: "Review couldn't be found" });
+    } else if (updatedReview.userId !== userId) {
+        res.status(403).json({ message: "Review must belong to the current user" });
+    } else {
+        updatedReview.review = review;
+        
+        updatedReview.stars = stars;
+
+        await updatedReview.save();
+
+        res.json(updatedReview);
+    } 
+});
+
 router.delete('/:reviewId', requireAuth, async (req, res, next) => {
     const { id: userId } = req.user;
     
-    const { reviewId } = req.params;
+    const reviewId = parseInt(req.params.reviewId);
 
-    let review = await Review.findByPk(+reviewId);
+    let review = await Review.findByPk(reviewId);
 
     if (!review) {
         res.status(404).json({ message: "Review couldn't be found" });
