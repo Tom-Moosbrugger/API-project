@@ -53,6 +53,16 @@ const validateSpot = [
     handleValidationErrors
   ];
 
+  const validateReviewBody = [
+    check('review')
+      .exists({ checkFalsy: true })
+      .withMessage('Review text is required'),
+    check('stars')
+      .isInt({ min: 1, max: 5})
+      .withMessage('Stars must be an integer from 1 to 5'),
+    handleValidationErrors
+  ];
+
 
 router.get('/:spotId/reviews', async (req, res, next) => {
     const spotId = parseInt(req.params.spotId);
@@ -185,6 +195,63 @@ router.get('/', async (req, res, next) => {
         Spots: spots
     });
 });
+
+/*
+
+we need to create a review for a spot based on the spotId
+there needs to be a logged in user to do this action
+the body needs to meet validation specs
+user can't have more than one review with a spot
+
+request hits the endpoint
+authorization is checked
+req body is validated
+get the user id
+get the spotId
+do a query for the spot, include reviews model, filtered by reviews that belong to the user
+
+if there is no spot, send an error
+
+if there is a spot, but it already has a review by the current user, send an error
+
+else, create a new review with the spotId and req body.
+
+
+*/
+router.post('/:spotId/reviews', requireAuth, validateReviewBody, async (req, res, next) => {
+    const userId = req.user.id;
+
+    const spotId = parseInt(req.params.spotId);
+
+    const { review, stars } = req.body;
+
+    const spot = await Spot.findByPk(spotId, {
+        include: [
+            { 
+                model: Review, 
+                where: { userId },
+                required: false ,
+            }
+        ],
+    });
+
+    if (!spot) {
+        res.status(404).json({ message: "Spot couldn't be found" });
+    } else if (spot.Reviews.length > 0) {
+        res.status(500).json({ message: "User already has a review for this spot"});
+    } else {
+        const newReview = await Review.create({
+            spotId,
+            userId,
+            review,
+            stars
+        });
+
+        res.status(201).json(newReview);
+    }
+
+    res.json('test')
+})
 
 
 router.post('/:spotId/images', requireAuth, async (req, res, next) => { 
