@@ -65,6 +65,8 @@ router.get('/current', requireAuth, async (req, res, next) => {
 
         if (imageIdx > -1) {
             review.Spot.previewImage = spotImages[imageIdx].url;
+        } else {
+            review.Spot.previewImage = '';
         }
 
         return review;
