@@ -11,36 +11,36 @@ if (process.env.NODE_ENV === 'production') {
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-   await User.bulkCreate([
+   User.bulkCreate([
     {
-      email: 'testuser1@gmail.com',
-      username: 'testuser1',
-      hashedPassword: bcrypt.hashSync('password1'),
-      firstName: 'test1',
-      lastName: 'test1'
+      email: 'demo@user.io',
+      username: 'Demo-lition',
+      firstName: 'John',
+      lastName: 'Doe',
+      hashedPassword: bcrypt.hashSync('password')
     },
     {
-      email: 'testuser2@gmail.com',
-      username: 'testuser2',
-      hashedPassword: bcrypt.hashSync('password2'),
-      firstName: 'test2',
-      lastName: 'test2'
+      email: 'user1@user.io',
+      username: 'FakeUser1',
+      firstName: 'Alice',
+      lastName: 'Smith',
+      hashedPassword: bcrypt.hashSync('password2')
     },
     {
-      email: 'testuser3@gmail.com',
-      username: 'testuser3',
-      hashedPassword: bcrypt.hashSync('password3'),
-      firstName: 'test3',
-      lastName: 'test3'
+      email: 'user2@user.io',
+      username: 'FakeUser2',
+      firstName: 'Michael',
+      lastName: 'Johnson',
+      hashedPassword: bcrypt.hashSync('password3')
     }
    ], { validate: true });
   },
 
   async down (queryInterface, Sequelize) {
-    options.tableName = 'Users'
+    options.tableName = 'Users';
     const Op = Sequelize.Op;
     return queryInterface.bulkDelete(options, {
-      username: { [Op.in]: ['testuser1', 'testuser2', 'testuser3'] }
+      username: { [Op.in]: ['Demo-lition', 'FakeUser1', 'FakeUser2'] }
     }, {}) 
   }
 };
