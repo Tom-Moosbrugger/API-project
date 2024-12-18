@@ -10,7 +10,7 @@ if (process.env.NODE_ENV === 'production') {
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    SpotImage.bulkCreate([
+    await SpotImage.bulkCreate([
       {
         spotId: 1,
         url: "image1 url",
@@ -32,7 +32,7 @@ module.exports = {
   async down (queryInterface, Sequelize) {
    options.tableName = 'SpotImages';
    const Op = Sequelize.Op;
-    return queryInterface.bulkDelete(options, {
+    return await queryInterface.bulkDelete(options, {
       url: { [Op.in]: ['image1 url', 'image2 url', 'image3 url'] }
     }, {}) 
   }
