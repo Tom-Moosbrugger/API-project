@@ -83,46 +83,6 @@ router.get('/:spotId/reviews', async (req, res, next) => {
 
 });  
 
-router.get('/:spotId', async (req, res, next) => {
-    
-    const spotId = parseInt(req.params.spotId);
-
-    const spot = await Spot.findOne( {
-        where: { id: spotId},
-        include: [
-            {
-                model: Review,
-                attributes: []
-            },
-            {
-                model: User,
-                as: 'Owner',
-                attributes: ['id', 'firstName', 'lastName']
-            },
-            {
-                model: SpotImage,
-                attributes: ['id', 'url', 'preview']
-            }
-        ],
-        attributes: {
-            include: [
-                [ sequelize.fn('AVG', sequelize.col('Reviews.stars')), 'avgRating' ],
-                [ sequelize.fn('COUNT', sequelize.col('Reviews.id')), 'numReviews' ]
-            ]
-        }        
-    });
-
-    if(spot.id){
-        res.status(200).json( spot );
-    } else {
-        return res.status(404).json({
-            "message": "Spot couldn't be found"
-       });
-    }
-    
-
-});
-
 router.get('/current', requireAuth, async (req, res, next) => {
     const { user } = req;    
     const ownerId = user.id;
@@ -156,6 +116,47 @@ router.get('/current', requireAuth, async (req, res, next) => {
         Spots: spots
     });
 });
+
+router.get('/:spotId', async (req, res, next) => {
+    
+    const spotId = parseInt(req.params.spotId);
+
+    const spot = await Spot.findOne( {
+        where: { id: spotId},
+        include: [
+            {
+                model: Review,
+                attributes: []
+            },
+            {
+                model: User,
+                as: 'Owner',
+                attributes: ['id', 'firstName', 'lastName']
+            },
+            {
+                model: SpotImage,
+                attributes: ['id', 'url', 'preview']
+            }
+        ],
+        attributes: {
+            include: [
+                [ sequelize.fn('AVG', sequelize.col('Reviews.stars')), 'avgStarRating' ],
+                [ sequelize.fn('COUNT', sequelize.col('Reviews.id')), 'numReviews' ]
+            ]
+        }        
+    });
+
+    if(spot.id){
+        res.status(200).json( spot );
+    } else {
+        return res.status(404).json({
+            "message": "Spot couldn't be found"
+       });
+    }    
+
+});
+
+
 
 router.get('/', async (req, res, next) => {
     const spots = await Spot.findAll( {
@@ -193,28 +194,27 @@ router.post('/:spotId/images', requireAuth, async (req, res, next) => {
     const spotId = parseInt(req.params.spotId);
     const { url, preview } = req.body;
 
-    const spot = await Spot.findOne( {
-        where: {
-            ownerId,
-            id: spotId
-        }
-    });
+    const spot = await Spot.findByPk( spotId );
 
     if(spot){
-        const newSpotImage = await SpotImage.create({
+        if (spot.ownerId !== ownerId) {
+          res
+            .status(403)
+            .json({ message: "Spot must belong to the current user" });
+        } else {
+          const newSpotImage = await SpotImage.create({
             spotId: spot.id,
             url,
-            preview
-        });
+            preview,
+          });
 
-      return res.status(201).json({
-        id: newSpotImage.id,
-        url: newSpotImage.url,
-        preview: newSpotImage.preview
-      });
-
+          return res.status(201).json({
+            id: newSpotImage.id,
+            url: newSpotImage.url,
+            preview: newSpotImage.preview,
+          });
+        }  
     } else {
-
         return res.status(404).json({
              "message": "Spot couldn't be found"
         });
@@ -242,27 +242,28 @@ router.put('/:spotId', requireAuth, validateSpot, async (req, res, next) => {
     const { address, city, state, country, lat, lng, name, description, price} = req.body;
 
     console.log(address, city, state, country, lat, lng, name, description, price)
-    const spot = await Spot.findOne( {
-        where: {
-            ownerId,
-            id: spotId
-        }
-    });
-
+    
+    const spot = await Spot.findByPk( spotId );
     if(spot){
-        spot.address = address;
-        spot.city = city;
-        spot.state =  state;    
-        spot.country = country;
-        spot.lat = lat;
-        spot.lng = lng;
-        spot.name = name;
-        spot.description = description;
-        spot.price = price;    
+        if (spot.ownerId !== ownerId) {
+          res
+            .status(403)
+            .json({ message: "Spot must belong to the current user" });
+        } else {
+          spot.address = address;
+          spot.city = city;
+          spot.state = state;
+          spot.country = country;
+          spot.lat = lat;
+          spot.lng = lng;
+          spot.name = name;
+          spot.description = description;
+          spot.price = price;
 
-        await spot.save();
-        
-        return res.status(200).json(spot);
+          await spot.save();
+
+          return res.status(200).json(spot);
+        }
 
     } else {
         return res.status(404).json({
@@ -279,20 +280,20 @@ router.delete('/:spotId', requireAuth, async (req, res, next) => {
 
     const spotId = parseInt(req.params.spotId);
 
-    const spot = await Spot.findOne( {
-        where: {
-            ownerId,
-            id: spotId
-        }
-    });
+    const spot = await Spot.findByPk( spotId );
 
     if(spot){
-        await spot.destroy();
-        
-        return res.status(200).json({
-        "message": "Successfully deleted"
-      });
+        if (spot.ownerId !== ownerId) {
+          res
+            .status(403)
+            .json({ message: "Spot must belong to the current user" });
+        } else {
+          await spot.destroy();
 
+          return res.status(200).json({
+            message: "Successfully deleted",
+          });
+        }
     } else {
 
         return res.status(404).json({
@@ -301,7 +302,6 @@ router.delete('/:spotId', requireAuth, async (req, res, next) => {
     }  
 
 });
-
 
 
 module.exports = router;
