@@ -196,28 +196,6 @@ router.get('/', async (req, res, next) => {
     });
 });
 
-/*
-
-we need to create a review for a spot based on the spotId
-there needs to be a logged in user to do this action
-the body needs to meet validation specs
-user can't have more than one review with a spot
-
-request hits the endpoint
-authorization is checked
-req body is validated
-get the user id
-get the spotId
-do a query for the spot, include reviews model, filtered by reviews that belong to the user
-
-if there is no spot, send an error
-
-if there is a spot, but it already has a review by the current user, send an error
-
-else, create a new review with the spotId and req body.
-
-
-*/
 router.post('/:spotId/reviews', requireAuth, validateReviewBody, async (req, res, next) => {
     const userId = req.user.id;
 
