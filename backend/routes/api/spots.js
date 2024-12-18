@@ -119,7 +119,8 @@ router.get('/current', requireAuth, async (req, res, next) => {
         },
         where: {
             ownerId
-        }        
+        },
+        group: ['Spot.id']        
     });
 
     res.status(200).json( {
@@ -153,7 +154,8 @@ router.get('/:spotId', async (req, res, next) => {
                 [ sequelize.fn('AVG', sequelize.col('Reviews.stars')), 'avgStarRating' ],
                 [ sequelize.fn('COUNT', sequelize.col('Reviews.id')), 'numReviews' ]
             ]
-        }        
+        },
+        group: ['Spot.id']        
     });
 
     if(spot.id){
@@ -188,7 +190,8 @@ router.get('/', async (req, res, next) => {
                 [ sequelize.fn('AVG', sequelize.col('Reviews.stars')), 'avgRating' ],
                 [ sequelize.col('SpotImages.url'), 'previewImage' ]
             ]
-        }        
+        },
+        group: ['Spot.id']        
     });
 
     res.json( {
