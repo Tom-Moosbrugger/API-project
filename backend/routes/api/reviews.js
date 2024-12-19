@@ -8,7 +8,7 @@ const { requireAuth } = require('../../utils/auth');
 
 const { Spot, Review, SpotImage, ReviewImage, User, sequelize } = require('../../db/models');
 
-const { Op, fn, col } = require('sequelize');
+const { Op, fn, col, literal } = require('sequelize');
 
 const router = express.Router();
 
@@ -25,6 +25,12 @@ const validateReviewBody = [
 router.get('/current', requireAuth, async (req, res, next) => {
     const { id } = req.user
 
+    const previewImageSubquery = `(SELECT url
+    FROM SpotImages 
+    WHERE SpotImages.spotId = Spot.id 
+    AND SpotImages.preview = true
+    LIMIT 1)`;
+
     const reviews = await Review.findAll({
         where: {
             userId: id
@@ -38,7 +44,8 @@ router.get('/current', requireAuth, async (req, res, next) => {
                 model: Spot,
                 attributes: {
                     exclude: ['description', 'createdAt', 'updatedAt'],
-                }
+                    include: [[literal(previewImageSubquery), "previewImage"]],
+                },
             },
             { 
                 model: ReviewImage,
@@ -47,33 +54,8 @@ router.get('/current', requireAuth, async (req, res, next) => {
         ]
     });
 
-    const spotIds = reviews.map(review => review.Spot.id);
-
-    const spotImages = await SpotImage.findAll({
-        where: {
-            [Op.and]: [
-                { preview: true }, 
-                { id: { [Op.in]: [...spotIds] } },
-            ]
-        }
-    });
-
-    let updatedReviews = reviews.map(review => {
-        review = review.toJSON();
-
-        let imageIdx = spotImages.findIndex(spotImage => spotImage.spotId === review.Spot.id);
-
-        if (imageIdx > -1) {
-            review.Spot.previewImage = spotImages[imageIdx].url;
-        } else {
-            review.Spot.previewImage = '';
-        }
-
-        return review;
-    });
-
     res.json({
-        Reviews: updatedReviews
+        Reviews: reviews
     });
 });
 
