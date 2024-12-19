@@ -13,6 +13,48 @@ const { literal, Op, fn, col, ValidationError, where } = require('sequelize');
 
 const router = express.Router();
 
+const convertDateToSeconds = (date) => {
+  date = new Date(date).toDateString();
+  return new Date(date).getTime();
+};
+
+const validateBooking = [
+  check("startDate")
+    .exists({ checkFalsy: true })
+    .withMessage("startDate is required")
+    .isDate({ format: "YYYY-MM-DD" })
+    .withMessage("Date must be in YYYY-MM-DD format")
+    .custom((value) => {
+      const todaysTime = convertDateToSeconds(new Date());
+
+      const bookingStartTime = convertDateToSeconds(value);
+        console.log("bookingStartTime: ",bookingStartTime);
+        console.log("todaysTime",todaysTime)
+      if (bookingStartTime < todaysTime) {
+        throw new Error("startDate cannot be in the past");
+      }
+
+      return true;
+    }),
+  check("endDate")
+    .exists({ checkFalsy: true })
+    .withMessage("endDate is required")
+    .isDate({ format: "YYYY-MM-DD" })
+    .withMessage("Date must be in YYYY-MM-DD format")
+    .custom((value, { req }) => {
+      const bookingStartTime = convertDateToSeconds(req.body.startDate);
+
+      const bookingEndTime = convertDateToSeconds(value);
+
+      if (bookingEndTime <= bookingStartTime) {
+        throw new Error("endDate cannot be on or before startDate");
+      }
+
+      return true;
+    }),
+  handleValidationErrors,
+];
+
 router.delete('/:bookingId', requireAuth, async (req, res, next) => {
     const { user } = req;    
     const userId = user.id;
@@ -90,6 +132,80 @@ router.get('/current', requireAuth, async (req, res, next) => {
     res.status(200).json( {
         Bookings: bookings
     });
+});
+
+
+router.put('/:bookingId', requireAuth, validateBooking, async (req, res, next) => {
+    const { user } = req;    
+    const userId = user.id;
+
+    const bookingId = parseInt(req.params.bookingId);
+    const { startDate, endDate } = req.body;
+
+    const proposedStartDate = convertDateToSeconds(startDate);
+
+    const proposedEndDate = convertDateToSeconds(endDate);
+
+    const todaysDate = convertDateToSeconds(new Date()); 
+    console.log(todaysDate);
+
+    const booking = await Booking.findByPk(bookingId);
+
+    if(booking){
+        const currBookingStartDate = convertDateToSeconds(booking.startDate);
+        const currBookingEndDate = convertDateToSeconds(booking.endDate);
+
+        if(currBookingEndDate < todaysDate){
+            return res.status(403).json({ message: "Past bookings can't be modified" });
+        }
+
+        let spot = await Spot.findByPk(booking.spotId, {
+          include: [{ model: Booking, attributes: ["id", "startDate", "endDate"] }],
+        });
+
+        const errors = {};
+
+        if (spot && spot.Bookings && spot.Bookings.length > 0) {
+          let i = 0;
+        
+          while (i < spot.Bookings.length && !hasConflict) {
+            const existingBooking = spot.Bookings[i];
+            if(existingBooking.id !== bookingId){
+                const bookingStartDate = convertDateToSeconds(existingBooking.startDate);
+                const bookingEndDate = convertDateToSeconds(existingBooking.endDate);
+        
+                if ( proposedStartDate >= bookingStartDate && proposedStartDate <= bookingEndDate ) {
+                errors.startDate = "Start date conflicts with an existing booking";
+                }
+        
+                if ( proposedEndDate >= bookingStartDate && proposedEndDate <= bookingEndDate) {
+                    errors.endDate = "End date conflicts with an existing booking";
+                }   
+            }
+            i++;             
+          }
+        }
+        
+        if (errors.startDate || errors.endDate) {
+          return res.status(403).json({
+            message:
+              "Sorry, this spot is already booked for the specified dates",
+            errors: errors,
+          });
+        }
+
+        booking.startDate = startDate;
+        booking.endDate = endDate;
+        await booking.save();
+
+        return res.status(200).json(booking);
+        
+    } else {
+        return res.status(404).json({
+            "message": "Booking couldn't be found"
+       });
+    }
+    
 });
 
 module.exports = router;

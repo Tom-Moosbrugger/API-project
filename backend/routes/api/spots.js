@@ -104,7 +104,7 @@ const validateSpot = [
     handleValidationErrors
   ];
 
-  const validateBooking = [
+    const validateBooking = [
     check('startDate')
       .exists({ checkFalsy: true })
       .withMessage('startDate is required')
@@ -113,9 +113,10 @@ const validateSpot = [
       .custom(value => {
         const todaysTime = convertDateToSeconds(new Date());
 
-        const bookingStartTime = convertDateToSeconds(value)
+        const bookingStartTime = convertDateToSeconds(value);
         
         if (bookingStartTime < todaysTime) {
+            console.log(bookingStartTime < todaysTime);
             throw new Error("startDate cannot be in the past");
         }
 
