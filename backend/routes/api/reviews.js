@@ -46,6 +46,7 @@ router.get('/current', requireAuth, async (req, res, next) => {
                     exclude: ['description', 'createdAt', 'updatedAt'],
                     include: [[literal(previewImageSubquery), "previewImage"]],
                 },
+                include: [{ model: SpotImage, attributes: [] }],
             },
             { 
                 model: ReviewImage,
