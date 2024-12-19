@@ -169,20 +169,6 @@ router.get('/:spotId/reviews', async (req, res, next) => {
 
 });  
 
-/*
-
-get all bookings for a spot
-if you are NOT the owner of the spot
-    you can only see spotId, startDate, endDate
-if you are the owner of the spot
-    you can only see the users
-
-find the spot, determine ownership
-
-make conditional queries 
-
-*/
-
 router.get('/:spotId/bookings', requireAuth, async (req, res, next) => {
     const { id: userId } = req.user;
     
