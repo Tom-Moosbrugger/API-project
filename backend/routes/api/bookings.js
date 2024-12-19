@@ -142,10 +142,13 @@ router.put('/:bookingId', requireAuth, validateBooking, async (req, res, next) =
     const bookingId = parseInt(req.params.bookingId);
     const { startDate, endDate } = req.body;
 
+    console.log("bookingId: ",bookingId);
+
     const proposedStartDate = convertDateToSeconds(startDate);
 
     const proposedEndDate = convertDateToSeconds(endDate);
 
+      
     const todaysDate = convertDateToSeconds(new Date()); 
     console.log(todaysDate);
 
@@ -162,18 +165,19 @@ router.put('/:bookingId', requireAuth, validateBooking, async (req, res, next) =
         let spot = await Spot.findByPk(booking.spotId, {
           include: [{ model: Booking, attributes: ["id", "startDate", "endDate"] }],
         });
-
+        console.log(spot.toJSON());
         const errors = {};
 
         if (spot && spot.Bookings && spot.Bookings.length > 0) {
           let i = 0;
         
-          while (i < spot.Bookings.length && !hasConflict) {
+          while (i < spot.Bookings.length ) {
             const existingBooking = spot.Bookings[i];
             if(existingBooking.id !== bookingId){
+
                 const bookingStartDate = convertDateToSeconds(existingBooking.startDate);
                 const bookingEndDate = convertDateToSeconds(existingBooking.endDate);
-        
+
                 if ( proposedStartDate >= bookingStartDate && proposedStartDate <= bookingEndDate ) {
                 errors.startDate = "Start date conflicts with an existing booking";
                 }
