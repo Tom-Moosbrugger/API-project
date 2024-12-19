@@ -28,8 +28,7 @@ const validateBooking = [
       const todaysTime = convertDateToSeconds(new Date());
 
       const bookingStartTime = convertDateToSeconds(value);
-        console.log("bookingStartTime: ",bookingStartTime);
-        console.log("todaysTime",todaysTime)
+
       if (bookingStartTime < todaysTime) {
         throw new Error("startDate cannot be in the past");
       }
@@ -61,26 +60,20 @@ router.delete('/:bookingId', requireAuth, async (req, res, next) => {
 
     const bookingId = parseInt(req.params.bookingId);
 
-    const booking = await Booking.findByPk( bookingId );
+    const booking = await Booking.findByPk( bookingId, {
+        include: [{ model: Spot, attributes: ['id','ownerId'] }]
+    } );
 
-    if(booking){
-        
-        const spot = await Spot.findByPk(booking.spotId);
-        
-        if (spot.ownerId !== userId && booking.userId !== userId) {
+    if(booking){        
+        if (booking.Spot.ownerId !== userId && booking.userId !== userId) {
           res.status(403).json({
             message:
               "Booking must belong to the current user or the Spot must belong to the current user",
           });
-        } else {
-          const todaysDate = new Date().toDateString();
-          const todaysTime = new Date(todaysDate).getTime();
-
-          const bookingStartDate = new Date(booking.startDate).toDateString();
-          const bookingStartTime = new Date(bookingStartDate).getTime();
-
-          const bookingEndDate = new Date(booking.endDate).toDateString();
-          const bookingEndTime = new Date(bookingEndDate).getTime();
+        } else {          
+          const todaysTime = convertDateToSeconds(new Date().toISOString().slice(0, 10));         
+          const bookingStartTime = convertDateToSeconds(booking.startDate);          
+          const bookingEndTime = convertDateToSeconds(booking.endDate);
 
           if (todaysTime < bookingEndTime && todaysTime > bookingStartTime) {
             return res.status(403).json({
@@ -142,17 +135,18 @@ router.put('/:bookingId', requireAuth, validateBooking, async (req, res, next) =
     const bookingId = parseInt(req.params.bookingId);
     const { startDate, endDate } = req.body;
 
-    console.log("bookingId: ",bookingId);
-
     const proposedStartDate = convertDateToSeconds(startDate);
-
     const proposedEndDate = convertDateToSeconds(endDate);
-
-      
-    const todaysDate = convertDateToSeconds(new Date()); 
-    console.log(todaysDate);
+    const todaysDate = convertDateToSeconds(new Date().toISOString().slice(0, 10));
 
     const booking = await Booking.findByPk(bookingId);
+
+    if(booking.userId !== userId ){
+        res.status(403).json({
+            message:
+              "Booking must belong to the current user",
+          });
+    }
 
     if(booking){
         const currBookingStartDate = convertDateToSeconds(booking.startDate);
@@ -165,7 +159,7 @@ router.put('/:bookingId', requireAuth, validateBooking, async (req, res, next) =
         let spot = await Spot.findByPk(booking.spotId, {
           include: [{ model: Booking, attributes: ["id", "startDate", "endDate"] }],
         });
-        console.log(spot.toJSON());
+        
         const errors = {};
 
         if (spot && spot.Bookings && spot.Bookings.length > 0) {
@@ -174,7 +168,6 @@ router.put('/:bookingId', requireAuth, validateBooking, async (req, res, next) =
           while (i < spot.Bookings.length ) {
             const existingBooking = spot.Bookings[i];
             if(existingBooking.id !== bookingId){
-
                 const bookingStartDate = convertDateToSeconds(existingBooking.startDate);
                 const bookingEndDate = convertDateToSeconds(existingBooking.endDate);
 
