@@ -197,8 +197,6 @@ router.get('/:spotId/bookings', requireAuth, async (req, res, next) => {
             Bookings: bookings
         });
     }
-
-    res.json('test')
 });
 
 router.get('/current', requireAuth, async (req, res, next) => {
