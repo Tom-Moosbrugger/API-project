@@ -10,6 +10,10 @@ const { Spot, Review, SpotImage, ReviewImage, User, sequelize } = require('../..
 
 const { Op, fn, col, literal } = require('sequelize');
 
+const { environment } = require('../../config');
+
+const isProduction = environment === 'production';
+
 const router = express.Router();
 
 const validateReviewBody = [
@@ -25,11 +29,18 @@ const validateReviewBody = [
 router.get('/current', requireAuth, async (req, res, next) => {
     const { id } = req.user
 
-    const previewImageSubquery = `(SELECT url
-    FROM SpotImages 
-    WHERE SpotImages.spotId = Spot.id 
-    AND SpotImages.preview = true
-    LIMIT 1)`;
+    let previewImageSubquery = isProduction ? 
+    `(SELECT "url"
+      FROM "bnb_connect_schema"."SpotImages" 
+      WHERE "bnb_connect_schema"."SpotImages"."spotId" = "Spot"."id"
+      AND "bnb_connect_schema"."SpotImages"."preview" = true
+      LIMIT 1) AS "Spot.previewImage"` 
+    : 
+     `(SELECT url
+      FROM SpotImages 
+      WHERE SpotImages.spotId = Spot.id 
+      AND SpotImages.preview = true
+      LIMIT 1)`;
 
     const reviews = await Review.findAll({
         where: {
