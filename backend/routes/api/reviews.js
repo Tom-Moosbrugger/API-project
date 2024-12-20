@@ -34,7 +34,7 @@ router.get('/current', requireAuth, async (req, res, next) => {
       FROM "bnb_connect_schema"."SpotImages" 
       WHERE "bnb_connect_schema"."SpotImages"."spotId" = "Spot"."id"
       AND "bnb_connect_schema"."SpotImages"."preview" = true
-      LIMIT 1) AS "Spot.previewImage"` 
+      LIMIT 1)` 
     : 
      `(SELECT url
       FROM SpotImages 
