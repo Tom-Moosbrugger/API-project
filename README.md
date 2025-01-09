@@ -1,3 +1,10 @@
+# THIS REPOSITORIES HAS BEEEN ARCHIVED, AS THE OWNERS MIGRATED THEIR PROJECTS TO NEW REPOSITORIES
+
+To see the updated versions, you can go here:
+
+https://github.com/Tom-Moosbrugger/BnB-Connect
+https://github.com/MehwishHanif/BNB_Connect
+
 # BnB Connect
 
 ## Database Schema Design
